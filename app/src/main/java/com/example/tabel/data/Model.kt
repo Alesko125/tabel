@@ -36,6 +36,13 @@ data class DayEntry(
     companion object {
         val EMPTY = DayEntry("", null, Kind.NONE)
 
+        /**
+         * У табелі вихідні позначають літерою «В», але чергових це не стосується:
+         * у них вільні дні просто лишаються порожніми. Тому для добової ротації
+         * порожня клітинка — це вихідний, а не «немає в графіку».
+         */
+        val IMPLICIT_OFF = DayEntry("", null, Kind.OFF)
+
         fun parse(cell: String): DayEntry {
             val s = cell.trim()
             if (s.isEmpty()) return EMPTY
@@ -66,7 +73,18 @@ data class PersonMonth(
     val block: Int,
     val days: Map<Int, DayEntry>
 ) {
-    fun day(d: Int): DayEntry = days[d] ?: DayEntry.EMPTY
+    /** Дні, коли людина відпрацювала добу (>= 20 год). */
+    val dobaDays: List<Int> by lazy {
+        days.filter { it.value.shift == ShiftKind.DOBA }.keys.sorted()
+    }
+
+    /** Черговий — той, хто цього місяця стоїть у добовій ротації. */
+    val isOnDuty: Boolean by lazy { dobaDays.isNotEmpty() }
+
+    fun day(d: Int): DayEntry {
+        val entry = days[d] ?: DayEntry.EMPTY
+        return if (entry.kind == Kind.NONE && isOnDuty) DayEntry.IMPLICIT_OFF else entry
+    }
 
     /**
      * У табелі прізвища записані як «Кобзар О.», а в налаштуваннях зберігається
@@ -77,9 +95,6 @@ data class PersonMonth(
         if (q.isEmpty()) return false
         return name.equals(q, ignoreCase = true) || name.startsWith(q, ignoreCase = true)
     }
-
-    /** Дні, коли людина відпрацювала добу (>= 20 год). */
-    val dobaDays: List<Int> get() = days.filter { it.value.shift == ShiftKind.DOBA }.keys.sorted()
 }
 
 data class MonthSheet(
@@ -93,6 +108,17 @@ data class MonthSheet(
         people.firstOrNull { it.name.equals(name, ignoreCase = true) }
             ?: people.firstOrNull { it.name.startsWith(name, ignoreCase = true) }
             ?: people.firstOrNull { it.name.contains(name, ignoreCase = true) }
+
+    /**
+     * Чи заповнений табель на цей день. Табельник проставляє дні поступово,
+     * тож майбутні дати часто порожні. Чергових не рахуємо: у них порожня
+     * клітинка — це вихідний, а не незаповнений день.
+     */
+    fun isFilledOn(day: Int): Boolean {
+        val staff = people.filter { !it.isOnDuty }
+        if (staff.isEmpty()) return true
+        return staff.count { it.day(day).kind != Kind.NONE } * 2 >= staff.size
+    }
 
     /** Усі, хто працює цього дня (крім вказаної людини). */
     fun workingOn(day: Int, exclude: String?): List<Pair<PersonMonth, DayEntry>> =

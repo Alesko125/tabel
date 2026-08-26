@@ -59,6 +59,10 @@ fun TodayScreen(
             item { MyDayCard(myEntry, state.shiftTimes) }
         }
 
+        if (!sheet.isFilledOn(date.dayOfMonth)) {
+            item { NotFilledYetCard() }
+        }
+
         val others = sheet.workingOn(date.dayOfMonth, state.myName)
             .sortedWith(
                 compareByDescending<Pair<PersonMonth, DayEntry>> { it.second.hours ?: 0.0 }
@@ -165,6 +169,25 @@ private fun DateNavigator(date: LocalDate, onShiftDay: (Long) -> Unit, onToday: 
             }
         }
         Spacer(Modifier.height(4.dp))
+    }
+}
+
+@Composable
+private fun NotFilledYetCard() {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Text(
+            text = "Табель на цей день ще не заповнений — список неповний. " +
+                "Графік чергових відомий наперед, решту проставляють поступово.",
+            modifier = Modifier.padding(12.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

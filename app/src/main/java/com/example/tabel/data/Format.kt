@@ -38,20 +38,25 @@ object Format {
         return "$n $word"
     }
 
-    /** Короткий підпис зміни: «доба 09:00 → 09:00», «11 год · 09:00–20:00». */
+    /** Короткий підпис зміни: «доба · 09:00 → 09:00», «11 год · 09:00–21:00». */
     fun shiftLabel(entry: DayEntry, settings: ShiftTimes): String = when (entry.shift) {
         ShiftKind.DOBA -> "доба · %02d:00 → %02d:00".format(settings.dobaStart, settings.dobaStart)
-        ShiftKind.LONG -> {
-            val h = entry.hours?.toInt() ?: 11
-            "$h год · %02d:00–%02d:00".format(settings.dayStart, (settings.dayStart + h) % 24)
-        }
-        ShiftKind.DAY -> {
+        ShiftKind.LONG, ShiftKind.DAY -> {
             val h = entry.hours?.toInt() ?: 8
-            // 8 робочих годин + година обіду
-            "$h год · %02d:00–%02d:00".format(settings.dayStart, (settings.dayStart + h + 1) % 24)
+            "$h год · %02d:00–%02d:00".format(settings.dayStart, endHour(settings.dayStart, h))
         }
         ShiftKind.PARTIAL -> entry.hours?.let { hours(it) } ?: entry.raw
         ShiftKind.NONE -> statusLabel(entry)
+    }
+
+    /**
+     * У табелі стоять фактично відпрацьовані години, без обіду. На зміні
+     * людина на годину довше: 8 годин — це з 9:00 до 18:00, 11 — до 21:00.
+     * Короткі зміни рахуємо без обіду.
+     */
+    private fun endHour(start: Int, workHours: Int): Int {
+        val lunch = if (workHours >= 7) 1 else 0
+        return (start + workHours + lunch) % 24
     }
 
     fun statusLabel(entry: DayEntry): String = when (entry.kind) {

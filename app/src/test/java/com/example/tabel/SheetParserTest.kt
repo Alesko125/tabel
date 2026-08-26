@@ -45,7 +45,53 @@ class SheetParserTest {
         assertEquals(listOf(2, 5, 8, 11, 14, 17, 20, 23, 26, 29), me!!.dobaDays)
         assertEquals(ShiftKind.DOBA, me.day(2).shift)
         assertEquals(24.0, me.day(2).hours!!, 0.001)
-        assertEquals(Kind.NONE, me.day(3).kind)
+        // Між добами в табелі порожньо — для чергового це вихідний.
+        assertEquals(Kind.OFF, me.day(3).kind)
+    }
+
+    @Test
+    fun `у чергового порожня клітинка означає вихідний`() {
+        val sheet = Fixtures.load("aug2026", 2026, 8)
+        val me = sheet.person("Кобзар")!!
+
+        assertTrue(me.isOnDuty)
+        // 26 серпня — доба, 27-го й 28-го в табелі порожньо, тобто вихідні.
+        assertEquals(ShiftKind.DOBA, me.day(26).shift)
+        assertEquals(Kind.OFF, me.day(27).kind)
+        assertEquals(Kind.OFF, me.day(28).kind)
+        // Кінець місяця після останньої доби 29-го — теж вихідні, а не «немає в графіку».
+        assertEquals(Kind.OFF, me.day(31).kind)
+    }
+
+    @Test
+    fun `у не-чергового порожня клітинка не стає вихідним`() {
+        val sheet = Fixtures.load("aug2026", 2026, 8)
+        val zinchenko = sheet.person("Зiнченко")!!
+
+        assertTrue(!zinchenko.isOnDuty)
+        // Вихідні в нього проставлені літерою «В»…
+        assertEquals(Kind.OFF, zinchenko.day(1).kind)
+        // …а порожні клітинки в кінці місяця — просто ще не заповнений табель.
+        assertEquals(Kind.NONE, zinchenko.day(27).kind)
+    }
+
+    @Test
+    fun `незаповнені дні табеля відрізняються від заповнених`() {
+        val sheet = Fixtures.load("aug2026", 2026, 8)
+
+        // Табель серпня заповнений по 26-те, далі у 8-годинних порожньо.
+        assertTrue(sheet.isFilledOn(26))
+        assertTrue(!sheet.isFilledOn(27))
+    }
+
+    @Test
+    fun `відпустка чергового не плутається з вихідним`() {
+        val sheet = Fixtures.load("jul2026", 2026, 7)
+        val me = sheet.person("Кобзар")!!
+
+        assertEquals(Kind.VACATION, me.day(10).kind)
+        assertEquals(Kind.OFF, me.day(4).kind)
+        assertEquals(ShiftKind.DOBA, me.day(3).shift)
     }
 
     @Test

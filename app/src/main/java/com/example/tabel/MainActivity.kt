@@ -2,6 +2,7 @@ package com.example.tabel
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,6 +56,11 @@ private fun TabelApp(vm: AppViewModel) {
     val state by vm.state.collectAsState()
     var tab by remember { mutableStateOf(Tab.TODAY) }
     var showSettings by remember { mutableStateOf(false) }
+
+    // Свайп «назад» має спершу закрити налаштування й повернути на головну вкладку,
+    // а не одразу викидати із застосунку.
+    BackHandler(enabled = showSettings) { showSettings = false }
+    BackHandler(enabled = !showSettings && tab != Tab.TODAY) { tab = Tab.TODAY }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
