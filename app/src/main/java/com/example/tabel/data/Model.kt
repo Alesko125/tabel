@@ -1,0 +1,106 @@
+package com.example.tabel.data
+
+import java.time.LocalDate
+
+/** Тип позначки в клітинці табеля. */
+enum class Kind {
+    WORK,       // відпрацьовані години (8, 11, 24, 4 …)
+    OFF,        // В — вихідний
+    VACATION,   // о/п — відпустка
+    SICK,       // б/л — лікарняний
+    UNPAID,     // НА — відпустка без збереження ЗП
+    ABSENT,     // Н — відсутній
+    OTHER,      // щось нерозпізнане, показуємо як є
+    NONE        // порожня клітинка
+}
+
+/** Тип зміни, виведений з кількості годин. */
+enum class ShiftKind { DOBA, LONG, DAY, PARTIAL, NONE }
+
+data class DayEntry(
+    val raw: String,
+    val hours: Double?,
+    val kind: Kind
+) {
+    val isWork: Boolean get() = kind == Kind.WORK
+
+    val shift: ShiftKind
+        get() = when {
+            kind != Kind.WORK || hours == null -> ShiftKind.NONE
+            hours >= 20 -> ShiftKind.DOBA
+            hours >= 10 -> ShiftKind.LONG
+            hours >= 7 -> ShiftKind.DAY
+            else -> ShiftKind.PARTIAL
+        }
+
+    companion object {
+        val EMPTY = DayEntry("", null, Kind.NONE)
+
+        fun parse(cell: String): DayEntry {
+            val s = cell.trim()
+            if (s.isEmpty()) return EMPTY
+
+            // Число (у таблиці трапляється і "8", і "8.0", і "8,0")
+            val num = s.replace(',', '.').toDoubleOrNull()
+            if (num != null) {
+                return if (num > 0) DayEntry(s, num, Kind.WORK) else EMPTY
+            }
+
+            val norm = s.lowercase().replace('\\', '/').replace(" ", "")
+            return when {
+                norm == "в" -> DayEntry(s, null, Kind.OFF)
+                norm.startsWith("о/п") || norm == "оп" -> DayEntry(s, null, Kind.VACATION)
+                norm.startsWith("б/л") || norm == "бл" -> DayEntry(s, null, Kind.SICK)
+                norm == "на" -> DayEntry(s, null, Kind.UNPAID)
+                norm == "н" -> DayEntry(s, null, Kind.ABSENT)
+                else -> DayEntry(s, null, Kind.OTHER)
+            }
+        }
+    }
+}
+
+/** Один рядок табеля: людина та її дні за місяць. */
+data class PersonMonth(
+    val name: String,
+    /** Номер блоку в табелі — люди в одному блоці, як правило, з одного підрозділу. */
+    val block: Int,
+    val days: Map<Int, DayEntry>
+) {
+    fun day(d: Int): DayEntry = days[d] ?: DayEntry.EMPTY
+
+    /**
+     * У табелі прізвища записані як «Кобзар О.», а в налаштуваннях зберігається
+     * саме прізвище — тому звіряємо за початком рядка, а не за точним збігом.
+     */
+    fun matches(query: String): Boolean {
+        val q = query.trim()
+        if (q.isEmpty()) return false
+        return name.equals(q, ignoreCase = true) || name.startsWith(q, ignoreCase = true)
+    }
+
+    /** Дні, коли людина відпрацювала добу (>= 20 год). */
+    val dobaDays: List<Int> get() = days.filter { it.value.shift == ShiftKind.DOBA }.keys.sorted()
+}
+
+data class MonthSheet(
+    val year: Int,
+    val month: Int,
+    val people: List<PersonMonth>
+) {
+    val daysInMonth: Int get() = java.time.YearMonth.of(year, month).lengthOfMonth()
+
+    fun person(name: String): PersonMonth? =
+        people.firstOrNull { it.name.equals(name, ignoreCase = true) }
+            ?: people.firstOrNull { it.name.startsWith(name, ignoreCase = true) }
+            ?: people.firstOrNull { it.name.contains(name, ignoreCase = true) }
+
+    /** Усі, хто працює цього дня (крім вказаної людини). */
+    fun workingOn(day: Int, exclude: String?): List<Pair<PersonMonth, DayEntry>> =
+        people.mapNotNull { p ->
+            if (exclude != null && p.matches(exclude)) return@mapNotNull null
+            val e = p.day(day)
+            if (e.isWork) p to e else null
+        }
+
+    fun contains(date: LocalDate): Boolean = date.year == year && date.monthValue == month
+}
