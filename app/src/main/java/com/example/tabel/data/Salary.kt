@@ -33,9 +33,6 @@ data class SalaryBreakdown(
 
 object Salary {
 
-    /** Типовий крок добової ротації, якщо вивести з даних не вдалося. */
-    private const val FALLBACK_STEP = 3
-
     fun compute(
         sheet: MonthSheet,
         me: PersonMonth,
@@ -105,13 +102,5 @@ object Salary {
         )
     }
 
-    /**
-     * Крок ротації = найменший проміжок між сусідніми добами.
-     * Через відпустку в середині місяця з'являються великі проміжки — їх ігноруємо.
-     */
-    private fun deriveStep(doba: List<Int>): Int {
-        if (doba.size < 2) return FALLBACK_STEP
-        val minGap = doba.zipWithNext { a, b -> b - a }.minOrNull() ?: FALLBACK_STEP
-        return if (minGap in 2..7) minGap else FALLBACK_STEP
-    }
+    private fun deriveStep(doba: List<Int>): Int = Rotation.deriveStep(doba)
 }

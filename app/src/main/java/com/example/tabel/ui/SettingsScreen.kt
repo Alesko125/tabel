@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,7 +28,11 @@ fun SettingsScreen(
     onDobaStart: (Int) -> Unit,
     onDayStart: (Int) -> Unit,
     onSheetId: (String) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onNotifyShift: (Boolean) -> Unit,
+    onNotifyChanges: (Boolean) -> Unit,
+    onReminderHour: (Int) -> Unit,
+    onRemindOnShiftDay: (Boolean) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -63,6 +68,39 @@ fun SettingsScreen(
             onChange = { it.toDoubleOrNull()?.let(onBonus) }
         )
 
+        SectionHeader("Сповіщення")
+        SwitchRow(
+            title = "Нагадувати про добу",
+            subtitle = if (state.remindOnShiftDay) {
+                "Вранці в день зміни, о %02d:00".format(state.reminderHour)
+            } else {
+                "Напередодні ввечері, о %02d:00".format(state.reminderHour)
+            },
+            checked = state.notifyShift,
+            onChange = onNotifyShift
+        )
+        if (state.notifyShift) {
+            SwitchRow(
+                title = "У день зміни, а не напередодні",
+                subtitle = "Вимкни, щоб нагадувало ввечері перед добою",
+                checked = state.remindOnShiftDay,
+                onChange = onRemindOnShiftDay
+            )
+            SettingField(
+                label = "Година нагадування",
+                initial = state.reminderHour.toString(),
+                numeric = true,
+                supporting = null,
+                onChange = { it.toIntOrNull()?.let(onReminderHour) }
+            )
+        }
+        SwitchRow(
+            title = "Повідомляти про зміни в графіку",
+            subtitle = "Табель редагують протягом місяця — застосунок перевіряє його раз на 6 годин",
+            checked = state.notifyChanges,
+            onChange = onNotifyChanges
+        )
+
         SectionHeader("Час змін")
         SettingField(
             label = "Початок доби, година",
@@ -94,6 +132,34 @@ fun SettingsScreen(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Composable
+private fun SwitchRow(
+    title: String,
+    subtitle: String?,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(Modifier.width(12.dp))
+        Switch(checked = checked, onCheckedChange = onChange)
     }
 }
 

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -18,8 +19,17 @@ import com.example.tabel.data.Format
 import com.example.tabel.data.MonthNames
 
 @Composable
-fun SalaryScreen(state: UiState, onShiftMonth: (Long) -> Unit) {
+fun SalaryScreen(
+    state: UiState,
+    onShiftMonth: (Long) -> Unit,
+    onLoadHistory: () -> Unit,
+    onSetActual: (Int, Int, Double?) -> Unit
+) {
     val salary = state.salary
+
+    LaunchedEffect(Unit) {
+        if (state.history.isEmpty() && !state.historyLoading) onLoadHistory()
+    }
 
     Column(
         modifier = Modifier
@@ -49,11 +59,37 @@ fun SalaryScreen(state: UiState, onShiftMonth: (Long) -> Unit) {
         Spacer(Modifier.height(8.dp))
 
         if (salary == null) {
-            Text(
-                text = "Немає даних за цей місяць.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = 24.dp)
-            )
+            if (state.isProjection) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Прогноз: ${Format.shifts(state.myDobaDays.size)} за графіком",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Якщо відпрацюєш усі доби — приблизно " +
+                                "${Format.money(state.base + state.bonusPool)}. Цього місяця ще " +
+                                "немає в таблиці, тож дати обчислені з ротації.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                Text(
+                    text = "Немає даних за цей місяць.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 24.dp)
+                )
+            }
+            Spacer(Modifier.height(20.dp))
+            HistorySection(state.history, state.historyLoading, onSetActual)
             return@Column
         }
 
@@ -185,5 +221,8 @@ fun SalaryScreen(state: UiState, onShiftMonth: (Long) -> Unit) {
                 )
             }
         }
+
+        Spacer(Modifier.height(20.dp))
+        HistorySection(state.history, state.historyLoading, onSetActual)
     }
 }

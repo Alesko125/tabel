@@ -38,16 +38,21 @@ object Format {
         return "$n $word"
     }
 
-    /** Короткий підпис зміни: «доба · 09:00 → 09:00», «11 год · 09:00–21:00». */
-    fun shiftLabel(entry: DayEntry, settings: ShiftTimes): String = when (entry.shift) {
-        ShiftKind.DOBA -> "доба · %02d:00 → %02d:00".format(settings.dobaStart, settings.dobaStart)
-        ShiftKind.LONG, ShiftKind.DAY -> {
-            val h = entry.hours?.toInt() ?: 8
-            "$h год · %02d:00–%02d:00".format(settings.dayStart, endHour(settings.dayStart, h))
+    /** Короткий підпис зміни: «доба · 08:00 → 08:00», «11 год · 09:00–21:00». */
+    fun shiftLabel(entry: DayEntry, settings: ShiftTimes, name: String? = null): String =
+        when (entry.shift) {
+            ShiftKind.DOBA ->
+                "доба · %02d:00 → %02d:00".format(settings.dobaStart, settings.dobaStart)
+
+            ShiftKind.LONG, ShiftKind.DAY -> {
+                val h = entry.hours?.toInt() ?: 8
+                val start = settings.dayStartFor(name)
+                "$h год · %02d:00–%02d:00".format(start, endHour(start, h))
+            }
+
+            ShiftKind.PARTIAL -> entry.hours?.let { hours(it) } ?: entry.raw
+            ShiftKind.NONE -> statusLabel(entry)
         }
-        ShiftKind.PARTIAL -> entry.hours?.let { hours(it) } ?: entry.raw
-        ShiftKind.NONE -> statusLabel(entry)
-    }
 
     /**
      * У табелі стоять фактично відпрацьовані години, без обіду. На зміні
@@ -83,4 +88,17 @@ object Format {
     }
 }
 
-data class ShiftTimes(val dobaStart: Int, val dayStart: Int)
+data class ShiftTimes(
+    val dobaStart: Int,
+    val dayStart: Int,
+    /**
+     * Індивідуальний початок зміни. У табелі цієї інформації немає, тому
+     * винятки задаються вручну — див. [com.example.tabel.data.Settings].
+     */
+    val perPerson: Map<String, Int> = emptyMap()
+) {
+    fun dayStartFor(name: String?): Int {
+        if (name == null) return dayStart
+        return perPerson[name] ?: dayStart
+    }
+}

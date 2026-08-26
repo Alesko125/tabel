@@ -91,12 +91,18 @@ fun MonthScreen(
                         Spacer(Modifier.weight(1f).aspectRatio(1f))
                     } else {
                         val day = dayCounter++
-                        val entry = me?.day(day) ?: DayEntry.EMPTY
+                        val projected = state.isProjection && state.rotation!!.isDobaOn(ym.atDay(day))
+                        val entry = when {
+                            me != null -> me.day(day)
+                            projected -> UiState.PROJECTED_DOBA
+                            else -> DayEntry.EMPTY
+                        }
                         DayCell(
                             day = day,
                             entry = entry,
                             isToday = LocalDate.now() == ym.atDay(day),
                             isSelected = date.dayOfMonth == day,
+                            isProjected = me == null && projected,
                             modifier = Modifier.weight(1f),
                             onClick = { onSelectDate(ym.atDay(day)) }
                         )
@@ -118,6 +124,17 @@ fun MonthScreen(
             InfoRow("Усього годин", Format.hours(hours))
             if (vacation > 0) InfoRow("Відпустка", Format.days(vacation))
             if (sick > 0) InfoRow("Лікарняний", Format.days(sick))
+        } else if (state.isProjection) {
+            SectionHeader("Прогноз")
+            InfoRow("Діб за графіком", Format.shifts(state.myDobaDays.size))
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Цього місяця ще немає в таблиці. Дати обчислені з ротації " +
+                    "«доба через ${state.rotation!!.step - 1}» — коли аркуш з'явиться, " +
+                    "застосунок візьме дані з нього.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -132,11 +149,14 @@ private fun DayCell(
     entry: DayEntry,
     isToday: Boolean,
     isSelected: Boolean,
+    isProjected: Boolean = false,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val color = shiftColor(entry)
     val filled = entry.kind != Kind.NONE && entry.kind != Kind.OFF
+    // Прогноз показуємо блідішим — це обчислене, а не взяте з табеля.
+    val alpha = if (isProjected) shiftPalette().fillAlpha * 0.55f else shiftPalette().fillAlpha
 
     Box(
         modifier = modifier
@@ -144,7 +164,7 @@ private fun DayCell(
             .padding(2.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(
-                if (filled) color.copy(alpha = shiftPalette().fillAlpha)
+                if (filled) color.copy(alpha = alpha)
                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
             )
             .then(
