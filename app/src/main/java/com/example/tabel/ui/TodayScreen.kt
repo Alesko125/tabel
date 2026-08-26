@@ -39,12 +39,14 @@ fun TodayScreen(
     val myEntry = state.myEntry
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .swipePages(onPrevious = { onShiftDay(-1) }, onNext = { onShiftDay(1) }),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         item { DateNavigator(date, onShiftDay, onToday) }
-        item { StateBanner(state.loading, state.error, state.fromCache) }
+        item { StateBanner(state.loading, state.error.takeIf { !state.isProjection }, state.fromCache) }
 
         state.scheduleChange?.let { change ->
             item { ScheduleChangeCard(change, onDismissChange) }
@@ -81,6 +83,26 @@ fun TodayScreen(
                     subtitle = Format.shiftLabel(pair.second, state.shiftTimes, pair.first.name),
                     color = shiftColor(pair.second),
                     onClick = { onSelectPerson(pair.first.name) }
+                )
+            }
+        }
+
+        // Дні без проставлених годин — за графіком робочі, тож показуємо окремо.
+        val expected = sheet.expectedOn(date.dayOfMonth, state.myName)
+            .sortedBy { it.name }
+
+        if (expected.isNotEmpty()) {
+            item { SectionHeader("Мають працювати", expected.size.toString()) }
+            items(expected, key = { "exp_" + it.name }) { person ->
+                PersonRow(
+                    name = person.name,
+                    subtitle = Format.expectedLabel(
+                        state.typicalHoursFor(person),
+                        state.shiftTimes,
+                        person.name
+                    ),
+                    color = shiftPalette().expected,
+                    onClick = { onSelectPerson(person.name) }
                 )
             }
         }
@@ -153,6 +175,7 @@ private fun findDobaOn(state: UiState, date: LocalDate): String? {
     val sheet = when {
         state.sheet?.contains(date) == true -> state.sheet
         state.nextSheet?.contains(date) == true -> state.nextSheet
+        state.prevSheet?.contains(date) == true -> state.prevSheet
         else -> null
     } ?: return null
     return sheet.people.firstOrNull { person ->
@@ -296,8 +319,8 @@ private fun NotFilledYetCard() {
             .padding(vertical = 4.dp)
     ) {
         Text(
-            text = "Табель на цей день ще не заповнений — список неповний. " +
-                "Графік чергових відомий наперед, решту проставляють день у день.",
+            text = "Фактичні години на цей день ще не проставлені — їх записують " +
+                "день у день. Хто має бути на зміні, видно з графіка.",
             modifier = Modifier.padding(12.dp),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant

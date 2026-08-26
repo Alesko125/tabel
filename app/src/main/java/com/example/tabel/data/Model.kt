@@ -5,6 +5,7 @@ import java.time.LocalDate
 /** Тип позначки в клітинці табеля. */
 enum class Kind {
     WORK,       // відпрацьовані години (8, 11, 24, 4 …)
+    EXPECTED,   // робочий день за графіком, години ще не проставлені
     OFF,        // В — вихідний
     VACATION,   // о/п — відпустка
     SICK,       // б/л — лікарняний
@@ -42,6 +43,12 @@ data class DayEntry(
          * порожня клітинка — це вихідний, а не «немає в графіку».
          */
         val IMPLICIT_OFF = DayEntry("", null, Kind.OFF)
+
+        /**
+         * У решти навпаки: вихідні проставлені літерою «В» наперед, а порожня
+         * клітинка означає робочий день, у який ще не записали фактичні години.
+         */
+        val EXPECTED_WORK = DayEntry("", null, Kind.EXPECTED)
 
         fun parse(cell: String): DayEntry {
             val s = cell.trim()
@@ -81,9 +88,31 @@ data class PersonMonth(
     /** Черговий — той, хто цього місяця стоїть у добовій ротації. */
     val isOnDuty: Boolean by lazy { dobaDays.isNotEmpty() }
 
+    /**
+     * Порожня клітинка означає протилежне залежно від того, чий це рядок:
+     * у чергового це вихідний між добами, у решти — робочий день за графіком,
+     * якому ще не проставили фактичні години.
+     */
     fun day(d: Int): DayEntry {
         val entry = days[d] ?: DayEntry.EMPTY
-        return if (entry.kind == Kind.NONE && isOnDuty) DayEntry.IMPLICIT_OFF else entry
+        if (entry.kind != Kind.NONE) return entry
+        return if (isOnDuty) DayEntry.IMPLICIT_OFF else DayEntry.EXPECTED_WORK
+    }
+
+    /** Те, що реально стоїть у клітинці, без підстановки за правилами. */
+    fun rawDay(d: Int): DayEntry = days[d] ?: DayEntry.EMPTY
+
+    /**
+     * Скільки годин у цієї людини зазвичай — найчастіше значення за місяць.
+     * Потрібно, щоб підказати тривалість дня, у який години ще не записані.
+     */
+    val typicalHours: Double? by lazy {
+        days.values.mapNotNull { it.hours }
+            .filter { it in 1.0..24.0 }
+            .groupingBy { it }
+            .eachCount()
+            .maxByOrNull { it.value }
+            ?.key
     }
 
     /**
@@ -117,8 +146,15 @@ data class MonthSheet(
     fun isFilledOn(day: Int): Boolean {
         val staff = people.filter { !it.isOnDuty }
         if (staff.isEmpty()) return true
-        return staff.count { it.day(day).kind != Kind.NONE } * 2 >= staff.size
+        return staff.count { it.rawDay(day).kind != Kind.NONE } * 2 >= staff.size
     }
+
+    /** Хто за графіком має працювати цього дня, але години ще не проставлені. */
+    fun expectedOn(day: Int, exclude: String?): List<PersonMonth> =
+        people.filter { person ->
+            (exclude == null || !person.matches(exclude)) &&
+                person.day(day).kind == Kind.EXPECTED
+        }
 
     /** Усі, хто працює цього дня (крім вказаної людини). */
     fun workingOn(day: Int, exclude: String?): List<Pair<PersonMonth, DayEntry>> =

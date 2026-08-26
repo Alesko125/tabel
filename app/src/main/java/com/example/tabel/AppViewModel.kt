@@ -30,8 +30,10 @@ data class MonthPay(
 data class UiState(
     val date: LocalDate = LocalDate.now(),
     val sheet: MonthSheet? = null,
-    /** Наступний місяць — потрібен, коли доба переходить через кінець місяця. */
+    /** Сусідні місяці — доба переходить через межу місяця, а з минулого
+     * місяця беремо звичну тривалість дня для тих, кому години ще не проставили. */
     val nextSheet: MonthSheet? = null,
+    val prevSheet: MonthSheet? = null,
     val loading: Boolean = false,
     val error: String? = null,
     val fromCache: Boolean = false,
@@ -86,6 +88,13 @@ data class UiState(
         }
 
     val person: PersonMonth? get() = selectedPerson?.let { sheet?.person(it) }
+
+    /**
+     * Скільки годин у людини зазвичай. Якщо в цьому місяці ще нічого не
+     * проставили, дивимося в попередній — інакше не було б що підказати.
+     */
+    fun typicalHoursFor(person: PersonMonth): Double? =
+        person.typicalHours ?: prevSheet?.person(person.name)?.typicalHours
 
     companion object {
         /** Доба, обчислена з ротації, а не взята з табеля. */
@@ -156,6 +165,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 repo.loadMonth(nextYm.year, nextYm.monthValue, false).sheet
             }.getOrNull()
 
+            val prevYm = YearMonth.from(date).minusMonths(1)
+            val prev = runCatching {
+                repo.loadMonth(prevYm.year, prevYm.monthValue, false).sheet
+            }.getOrNull()
+
             // Зміну в графіку показуємо самі: якщо просто перезаписати знімок,
             // фоновий воркер уже не матиме з чим порівнювати.
             var change = _state.value.scheduleChange
@@ -167,6 +181,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             _state.value = _state.value.copy(
                 sheet = result.sheet,
                 nextSheet = next,
+                prevSheet = prev,
                 loading = false,
                 error = result.error,
                 fromCache = result.fromCache,

@@ -64,7 +64,19 @@ object Format {
         return (start + workHours + lunch) % 24
     }
 
+    /**
+     * Підпис для дня, який за графіком робочий, але фактичні години ще
+     * не записані. Тривалість підказуємо зі звичного для цієї людини дня.
+     */
+    fun expectedLabel(typicalHours: Double?, settings: ShiftTimes, name: String?): String {
+        if (typicalHours == null) return "за графіком · години ще не проставлені"
+        val h = typicalHours.toInt()
+        val start = settings.dayStartFor(name)
+        return "за графіком · зазвичай $h год · %02d:00–%02d:00".format(start, endHour(start, h))
+    }
+
     fun statusLabel(entry: DayEntry): String = when (entry.kind) {
+        Kind.EXPECTED -> "робочий день за графіком"
         Kind.OFF -> "вихідний"
         Kind.VACATION -> "відпустка"
         Kind.SICK -> "лікарняний"
@@ -78,6 +90,7 @@ object Format {
     /** Коротка позначка для клітинки календаря. */
     fun cellLabel(entry: DayEntry): String = when (entry.kind) {
         Kind.WORK -> entry.hours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: "•"
+        Kind.EXPECTED -> "·"
         Kind.OFF -> "В"
         Kind.VACATION -> "від"
         Kind.SICK -> "б/л"

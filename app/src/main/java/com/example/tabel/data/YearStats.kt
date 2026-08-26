@@ -7,6 +7,8 @@ data class PersonYearStats(
     val vacationDays: Int,
     val sickDays: Int,
     val workedDays: Int,
+    /** Робочі дні за графіком, яким ще не проставили фактичні години. */
+    val expectedDays: Int,
     val dobaCount: Int,
     val hours: Double,
     /** Скільки місяців цієї людини знайшлося в таблиці. */
@@ -44,10 +46,10 @@ object YearStats {
     /**
      * Зводить місячні аркуші в підсумок по людях.
      *
-     * Вихідні рахуються з поправкою на те, що в чергових вони не позначені
-     * літерою «В», а просто лишаються порожніми — [PersonMonth.day] це вже
-     * враховує. Порожні клітинки решти людей означають незаповнений табель,
-     * тож у вихідні вони не потрапляють.
+     * Порожні клітинки означають різне залежно від рядка: у чергових це
+     * вихідний між добами, у решти — робочий день без проставлених годин.
+     * [PersonMonth.day] це вже враховує, тож такі дні йдуть у вихідні
+     * та в заплановані відповідно, а не губляться.
      */
     fun aggregate(
         sheets: List<MonthSheet>,
@@ -80,6 +82,9 @@ object YearStats {
                                 shared[other.name] = (shared[other.name] ?: 0) + 1
                             }
                         }
+                    } else if (mine.kind == Kind.EXPECTED) {
+                        // День за графіком робочий — перерву він не продовжує.
+                        currentBreak = 0
                     } else if (mine.kind != Kind.NONE) {
                         if (isWeekend && mine.kind == Kind.OFF) weekendsOff++
                         currentBreak++
@@ -96,6 +101,7 @@ object YearStats {
                 for (day in 1..sheet.daysInMonth) {
                     val entry = person.day(day)
                     when (entry.kind) {
+                        Kind.EXPECTED -> s.expected++
                         Kind.OFF -> s.off++
                         Kind.VACATION -> s.vacation++
                         Kind.SICK -> s.sick++
@@ -117,6 +123,7 @@ object YearStats {
                 vacationDays = s.vacation,
                 sickDays = s.sick,
                 workedDays = s.worked,
+                expectedDays = s.expected,
                 dobaCount = s.doba,
                 hours = s.hours,
                 monthsPresent = s.months,
@@ -142,6 +149,7 @@ object YearStats {
         var vacation = 0
         var sick = 0
         var worked = 0
+        var expected = 0
         var doba = 0
         var hours = 0.0
         var months = 0

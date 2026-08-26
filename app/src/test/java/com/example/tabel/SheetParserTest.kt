@@ -64,15 +64,26 @@ class SheetParserTest {
     }
 
     @Test
-    fun `у не-чергового порожня клітинка не стає вихідним`() {
+    fun `у не-чергового порожня клітинка означає робочий день за графіком`() {
         val sheet = Fixtures.load("aug2026", 2026, 8)
         val zinchenko = sheet.person("Зiнченко")!!
 
         assertTrue(!zinchenko.isOnDuty)
-        // Вихідні в нього проставлені літерою «В»…
+        // Вихідні в нього проставлені літерою «В» наперед…
         assertEquals(Kind.OFF, zinchenko.day(1).kind)
-        // …а порожні клітинки в кінці місяця — просто ще не заповнений табель.
-        assertEquals(Kind.NONE, zinchenko.day(27).kind)
+        // …а порожня клітинка — робочий день, якому ще не записали години.
+        assertEquals(Kind.EXPECTED, zinchenko.day(27).kind)
+        // У сирому вигляді там і далі порожньо.
+        assertEquals(Kind.NONE, zinchenko.rawDay(27).kind)
+    }
+
+    @Test
+    fun `звичну тривалість дня видно з заповнених клітинок`() {
+        val sheet = Fixtures.load("aug2026", 2026, 8)
+
+        assertEquals(8.0, sheet.person("Зiнченко")!!.typicalHours!!, 0.001)
+        assertEquals(11.0, sheet.person("Горбенко")!!.typicalHours!!, 0.001)
+        assertEquals(24.0, sheet.person("Кобзар")!!.typicalHours!!, 0.001)
     }
 
     @Test

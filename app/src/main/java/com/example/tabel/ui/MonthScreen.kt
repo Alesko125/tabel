@@ -40,6 +40,7 @@ fun MonthScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .swipePages(onPrevious = { onShiftMonth(-1) }, onNext = { onShiftMonth(1) })
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
@@ -61,7 +62,7 @@ fun MonthScreen(
             }
         }
 
-        StateBanner(state.loading, state.error, state.fromCache)
+        StateBanner(state.loading, state.error.takeIf { !state.isProjection }, state.fromCache)
         Spacer(Modifier.height(12.dp))
 
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -202,6 +203,7 @@ private fun Legend() {
         p.doba to "24 — доба",
         p.long to "11 — зміна 11 годин",
         p.day to "8 — денна зміна",
+        p.expected to "· — робочий день, години ще не проставлені",
         p.off to "В — вихідний",
         p.vacation to "від — відпустка",
         p.sick to "б/л — лікарняний"

@@ -167,6 +167,7 @@ private fun TabelApp(vm: AppViewModel) {
 
                 tab == Tab.PEOPLE -> PeopleScreen(
                     state = state,
+                    onShiftMonth = vm::shiftMonth,
                     onSelectPerson = vm::selectPerson
                 )
 

@@ -34,6 +34,7 @@ fun SalaryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .swipePages(onPrevious = { onShiftMonth(-1) }, onNext = { onShiftMonth(1) })
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
@@ -55,7 +56,7 @@ fun SalaryScreen(
             }
         }
 
-        StateBanner(state.loading, state.error, state.fromCache)
+        StateBanner(state.loading, state.error.takeIf { !state.isProjection }, state.fromCache)
         Spacer(Modifier.height(8.dp))
 
         if (salary == null) {

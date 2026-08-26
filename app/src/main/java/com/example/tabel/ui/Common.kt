@@ -4,8 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,12 +40,41 @@ fun shiftColor(entry: DayEntry): Color {
             ShiftKind.DAY -> p.day
             else -> p.partial
         }
+        Kind.EXPECTED -> p.expected
         Kind.OFF -> p.off
         Kind.VACATION -> p.vacation
         Kind.SICK -> p.sick
         Kind.UNPAID -> p.vacation
         Kind.ABSENT -> p.sick
         else -> p.none
+    }
+}
+
+/**
+ * Гортання вліво-вправо: наступний і попередній день або місяць.
+ *
+ * Вертикальна прокрутка не заважає — вона забирає жест лише тоді, коли
+ * палець першим перетинає поріг по вертикалі.
+ */
+@Composable
+fun Modifier.swipePages(onPrevious: () -> Unit, onNext: () -> Unit): Modifier {
+    val threshold = with(LocalDensity.current) { 56.dp.toPx() }
+    var dragged by remember { mutableFloatStateOf(0f) }
+
+    return this.pointerInput(onPrevious, onNext) {
+        detectHorizontalDragGestures(
+            onDragStart = { dragged = 0f },
+            onDragEnd = {
+                when {
+                    dragged > threshold -> onPrevious()
+                    dragged < -threshold -> onNext()
+                }
+            },
+            onDragCancel = { dragged = 0f }
+        ) { change, amount ->
+            dragged += amount
+            change.consume()
+        }
     }
 }
 
