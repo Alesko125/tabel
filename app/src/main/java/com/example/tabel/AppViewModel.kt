@@ -31,7 +31,7 @@ data class UiState(
     val date: LocalDate = LocalDate.now(),
     val sheet: MonthSheet? = null,
     /** Сусідні місяці — доба переходить через межу місяця, а з минулого
-     * місяця беремо звичну тривалість дня для тих, кому години ще не проставили. */
+     * місяця беру звичну тривалість дня для тих, кому години ще не забили. */
     val nextSheet: MonthSheet? = null,
     val prevSheet: MonthSheet? = null,
     val loading: Boolean = false,
@@ -64,10 +64,10 @@ data class UiState(
     val me: PersonMonth? get() = sheet?.person(myName)
     val shiftTimes: ShiftTimes get() = ShiftTimes(dobaStart, dayStart, personStartHours)
 
-    /** Місяця немає в таблиці, але ротацію можна порахувати. */
+    /** Місяця нема в таблиці, але ротацію можна порахувати. */
     val isProjection: Boolean get() = sheet == null && rotation != null
 
-    /** Мої доби цього місяця — з табеля або з прогнозу. */
+    /** Мої доби цього місяця — з табеля чи з прогнозу. */
     val myDobaDays: List<Int>
         get() = me?.dobaDays
             ?: rotation?.dobaDaysIn(date.year, date.monthValue)
@@ -90,14 +90,14 @@ data class UiState(
     val person: PersonMonth? get() = selectedPerson?.let { sheet?.person(it) }
 
     /**
-     * Скільки годин у людини зазвичай. Якщо в цьому місяці ще нічого не
-     * проставили, дивимося в попередній — інакше не було б що підказати.
+     * Скільки в людини годин зазвичай. Якщо цього місяця ще нічого не
+     * забили, дивлюсь у попередній — інакше не було б що підказати.
      */
     fun typicalHoursFor(person: PersonMonth): Double? =
         person.typicalHours ?: prevSheet?.person(person.name)?.typicalHours
 
     companion object {
-        /** Доба, обчислена з ротації, а не взята з табеля. */
+        /** Доба, порахована з ротації, а не взята з табеля. */
         val PROJECTED_DOBA = DayEntry("24", 24.0, Kind.WORK)
     }
 }
@@ -170,8 +170,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 repo.loadMonth(prevYm.year, prevYm.monthValue, false).sheet
             }.getOrNull()
 
-            // Зміну в графіку показуємо самі: якщо просто перезаписати знімок,
-            // фоновий воркер уже не матиме з чим порівнювати.
+            // Зміну в графіку показую сам: якщо просто перезаписати знімок,
+            // фоновому воркеру вже не буде з чим порівнювати.
             var change = _state.value.scheduleChange
             result.sheet?.let { sheet ->
                 rememberRotation(sheet)
@@ -192,13 +192,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Ротацію запам'ятовуємо, щоб прогнозувати місяці, яких ще немає в таблиці. */
+    /** Ротацію запам'ятовую, щоб прогнозувати місяці, яких ще нема в таблиці. */
     private fun rememberRotation(sheet: MonthSheet) {
         val me = sheet.person(settings.myName) ?: return
         val doba = me.dobaDays
         if (doba.isEmpty()) return
         val anchor = LocalDate.of(sheet.year, sheet.month, doba.first())
-        // Беремо найсвіжіший відомий місяць, щоб прогноз ішов від нього.
+        // Беру найсвіжіший відомий місяць, щоб прогноз ішов від нього.
         if (anchor.toEpochDay() >= settings.rotationAnchor) {
             settings.rotationAnchor = anchor.toEpochDay()
             settings.rotationStep = Rotation.deriveStep(doba)
@@ -249,9 +249,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // ---------- статистика ----------
 
     /**
-     * Рахує підсумки по людях. За весь час це близько 150 місяців — тягнемо
-     * послідовно й показуємо прогрес, бо перший раз це помітно довго.
-     * Далі місяці беруться з кешу.
+     * Рахує підсумки по людях. За весь час це десь 150 місяців — тягну
+     * послідовно й показую прогрес, бо перший раз це реально довго.
+     * Далі місяці йдуть з кешу.
      */
     fun loadStats(scope: StatsScope = _state.value.statsScope) {
         if (_state.value.statsLoading) return
@@ -369,7 +369,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     companion object {
-        /** Найраніший рік у таблиці — далі назад аркушів немає. */
+        /** Найраніший рік у таблиці — далі назад аркушів нема. */
         const val FIRST_YEAR_IN_SHEET = 2014
     }
 }

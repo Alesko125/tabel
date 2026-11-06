@@ -1,6 +1,6 @@
 package com.example.tabel.data
 
-/** Хто закривав добу замість мене (або я замість когось). */
+/** Хто закривав добу за мене (або я за когось). */
 data class Cover(val day: Int, val who: String)
 
 data class SalaryBreakdown(
@@ -8,7 +8,7 @@ data class SalaryBreakdown(
     val month: Int,
     /** Скільки діб мало бути за графіком «доба через дві» цього місяця. */
     val plannedShifts: Int,
-    /** Скільки діб я фактично відпрацював. */
+    /** Скільки діб я реально відробив. */
     val workedShifts: Int,
     /** Доби понад мій графік — коли я підміняв когось. */
     val extraShifts: Int,
@@ -24,10 +24,10 @@ data class SalaryBreakdown(
     val vacationDays: Int,
     val sickDays: Int,
     val totalHours: Double,
-    /** false — якщо цього місяця людина не була в добовій ротації (напр. працювала 8 год). */
+    /** false — якщо людина цього місяця не в добовій ротації (напр. робила 8 год). */
     val onRotation: Boolean
 ) {
-    /** Скільки надбавки не дорахували через відпустку/лікарняний. */
+    /** Скільки надбавки недодали через відпустку/лікарняний. */
     val bonusLost: Double get() = (bonusPool - bonus).coerceAtLeast(0.0)
 }
 
@@ -66,7 +66,7 @@ object Salary {
         val worked = myDoba.size
         val extra = myDoba.count { it !in plannedSet }
 
-        // Мої планові доби, які я не відпрацював → шукаємо, хто стояв на добі того дня.
+        // Мої планові доби, які я не відробив → дивлюсь, хто стояв на добі того дня.
         val coveredForMe = plannedDays
             .filter { day -> !me.day(day).let { it.shift == ShiftKind.DOBA } }
             .mapNotNull { day ->
@@ -76,7 +76,7 @@ object Salary {
                 who?.let { Cover(day, it.name) }
             }
 
-        // Доби, які я відпрацював поза своїм графіком → я підміняв когось.
+        // Доби, які я відробив поза своїм графіком → я когось підміняв.
         val coveredByMe = myDoba
             .filter { it !in plannedSet }
             .map { day ->

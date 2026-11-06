@@ -7,7 +7,7 @@ data class PersonYearStats(
     val vacationDays: Int,
     val sickDays: Int,
     val workedDays: Int,
-    /** Робочі дні за графіком, яким ще не проставили фактичні години. */
+    /** Робочі дні за графіком, куди ще не забили фактичні години. */
     val expectedDays: Int,
     val dobaCount: Int,
     val hours: Double,
@@ -24,7 +24,7 @@ data class PersonYearStats(
     val spanMonths: Int get() = lastMonthIndex - firstMonthIndex + 1
 }
 
-/** Скільки змін я відпрацював разом із конкретною людиною. */
+/** Скільки змін я відробив разом з конкретною людиною. */
 data class Partner(val name: String, val sharedShifts: Int)
 
 data class StatsResult(
@@ -44,12 +44,12 @@ data class StatsResult(
 object YearStats {
 
     /**
-     * Зводить місячні аркуші в підсумок по людях.
+     * Зводжу місячні аркуші в підсумок по людях.
      *
-     * Порожні клітинки означають різне залежно від рядка: у чергових це
-     * вихідний між добами, у решти — робочий день без проставлених годин.
-     * [PersonMonth.day] це вже враховує, тож такі дні йдуть у вихідні
-     * та в заплановані відповідно, а не губляться.
+     * Пусті клітинки значать різне, залежно від рядка: у чергових це
+     * вихідний між добами, а в решти — робочий день без забитих годин.
+     * [PersonMonth.day] це вже враховує, так що такі дні йдуть у вихідні
+     * чи в заплановані як треба, а не губляться.
      */
     fun aggregate(
         sheets: List<MonthSheet>,

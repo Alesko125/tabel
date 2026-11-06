@@ -187,7 +187,7 @@ private fun TabelApp(vm: AppViewModel) {
     }
 }
 
-/** На Android 13+ без дозволу сповіщення мовчки не з'являються. */
+/** На Android 13+ без дозволу сповіщення мовчки не приходять. */
 @Composable
 private fun RequestNotificationPermission(enabled: Boolean) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return

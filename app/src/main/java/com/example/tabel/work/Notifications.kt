@@ -69,7 +69,7 @@ object Notifications {
         runCatching { NotificationManagerCompat.from(context).notify(id, notification) }
     }
 
-    /** На Android 13+ без дозволу сповіщення просто не з'являться. */
+    /** На Android 13+ без дозволу сповіщення просто не прийдуть. */
     fun canPost(context: Context): Boolean =
         ContextCompat.checkSelfPermission(
             context, Manifest.permission.POST_NOTIFICATIONS

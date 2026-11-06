@@ -33,7 +33,7 @@ import com.example.tabel.data.Settings
 import com.example.tabel.data.ShiftKind
 import java.time.LocalDate
 
-/** Те, що видно на віджеті: статус на сьогодні й коли наступна доба. */
+/** Що видно на віджеті: статус на сьогодні й коли наступна доба. */
 private data class WidgetState(
     val today: String,
     val isDoba: Boolean,
@@ -80,7 +80,7 @@ class TabelWidget : GlanceAppWidget() {
         me: com.example.tabel.data.PersonMonth?,
         today: LocalDate
     ): String? {
-        // Спершу пробуємо табель поточного місяця, далі — прогноз ротації.
+        // Спершу пробую табель цього місяця, далі — прогноз ротації.
         val fromSheet = me?.dobaDays
             ?.map { LocalDate.of(today.year, today.monthValue, it) }
             ?.firstOrNull { it.isAfter(today) }

@@ -27,8 +27,8 @@ fun PeopleScreen(
     onShiftMonth: (Long) -> Unit,
     onSelectPerson: (String) -> Unit
 ) {
-    // Якщо місяця ще немає в таблиці, показуємо склад із попереднього —
-    // люди навряд чи зміняться, а для чергових графік можна порахувати.
+    // Якщо місяця ще нема в таблиці, показую склад з попереднього —
+    // люди навряд чи зміняться, а чергових графік і так рахується.
     val sheet = state.sheet
     val fallback = if (sheet == null) state.prevSheet else null
     val shown = sheet ?: fallback
@@ -41,7 +41,7 @@ fun PeopleScreen(
     ) {
         item {
             MonthNavigator(state, onShiftMonth)
-            // Відсутній аркуш — не помилка, якщо є що показати замість нього.
+            // Нема аркуша — не помилка, якщо є чим його замінити.
             StateBanner(state.loading, state.error.takeIf { shown == null }, state.fromCache)
         }
 

@@ -13,7 +13,7 @@ import java.time.LocalDate
 
 /**
  * Нагадує про добу. Запускається раз на добу о вказаній годині й сам
- * переставляє себе на наступний день.
+ * переставляє себе на завтра.
  */
 class ShiftReminderWorker(
     context: Context,
@@ -24,7 +24,7 @@ class ShiftReminderWorker(
         val settings = Settings(applicationContext)
         if (!settings.notifyShift) return Result.success()
 
-        // Нагадуємо або вранці в день зміни, або напередодні ввечері.
+        // Нагадую або вранці в день зміни, або напередодні ввечері.
         val target = if (settings.remindOnShiftDay) LocalDate.now() else LocalDate.now().plusDays(1)
         if (settings.lastReminderDate == target.toString()) return Result.success()
 
@@ -52,8 +52,8 @@ class ShiftReminderWorker(
 }
 
 /**
- * Перечитує табель і повідомляє, якщо мої доби зрушили. Табель редагують
- * протягом місяця, тож зміну графіка інакше можна помітити лише випадково.
+ * Перечитує табель і каже, якщо мої доби зрушили. Табель правлять
+ * протягом місяця, так що зміну графіка інакше помітиш хіба випадково.
  */
 class ScheduleWatchWorker(
     context: Context,
@@ -87,7 +87,7 @@ class ScheduleWatchWorker(
         return Result.success()
     }
 
-    /** Запам'ятовуємо ротацію, щоб рахувати прогноз за межами таблиці. */
+    /** Запам'ятовую ротацію, щоб рахувати прогноз за межами таблиці. */
     private fun rememberRotation(sheet: MonthSheet, settings: Settings) {
         val me = sheet.person(settings.myName) ?: return
         val doba = me.dobaDays

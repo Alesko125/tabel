@@ -9,7 +9,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Фікстури — справжній CSV-експорт аркушів із таблиці табеля. */
+/** Фікстури — справжній CSV-експорт аркушів з таблиці. */
 internal object Fixtures {
     fun load(name: String, year: Int, month: Int): MonthSheet {
         val csv = Fixtures::class.java.getResourceAsStream("/$name.csv")!!
@@ -45,7 +45,7 @@ class SheetParserTest {
         assertEquals(listOf(2, 5, 8, 11, 14, 17, 20, 23, 26, 29), me!!.dobaDays)
         assertEquals(ShiftKind.DOBA, me.day(2).shift)
         assertEquals(24.0, me.day(2).hours!!, 0.001)
-        // Між добами в табелі порожньо — для чергового це вихідний.
+        // Між добами в табелі пусто — для чергового це вихідний.
         assertEquals(Kind.OFF, me.day(3).kind)
     }
 
@@ -55,7 +55,7 @@ class SheetParserTest {
         val me = sheet.person("Кобзар")!!
 
         assertTrue(me.isOnDuty)
-        // 26 серпня — доба, 27-го й 28-го в табелі порожньо, тобто вихідні.
+        // 26 серпня — доба, 27-го й 28-го в табелі пусто, тобто вихідні.
         assertEquals(ShiftKind.DOBA, me.day(26).shift)
         assertEquals(Kind.OFF, me.day(27).kind)
         assertEquals(Kind.OFF, me.day(28).kind)
@@ -69,11 +69,11 @@ class SheetParserTest {
         val zinchenko = sheet.person("Зiнченко")!!
 
         assertTrue(!zinchenko.isOnDuty)
-        // Вихідні в нього проставлені літерою «В» наперед…
+        // Вихідні в нього стоять «В» наперед…
         assertEquals(Kind.OFF, zinchenko.day(1).kind)
-        // …а порожня клітинка — робочий день, якому ще не записали години.
+        // …а пуста клітинка — робочий день, куди ще не забили години.
         assertEquals(Kind.EXPECTED, zinchenko.day(27).kind)
-        // У сирому вигляді там і далі порожньо.
+        // У сирому вигляді там і далі пусто.
         assertEquals(Kind.NONE, zinchenko.rawDay(27).kind)
     }
 
@@ -90,7 +90,7 @@ class SheetParserTest {
     fun `незаповнені дні табеля відрізняються від заповнених`() {
         val sheet = Fixtures.load("aug2026", 2026, 8)
 
-        // Табель серпня заповнений по 26-те, далі у 8-годинних порожньо.
+        // Табель серпня заповнений по 26-те, далі у 8-годинних пусто.
         assertTrue(sheet.isFilledOn(26))
         assertTrue(!sheet.isFilledOn(27))
     }

@@ -31,7 +31,7 @@ class YearStatsTest {
         assertEquals(21, me.dobaCount)
         assertEquals(21, me.workedDays)
         assertEquals(21 * 24.0, me.hours, 0.01)
-        // Решта днів трьох місяців — вихідні або відпустка, «немає даних» не лишається.
+        // Решта днів трьох місяців — вихідні чи відпустка, «немає даних» не лишається.
         val totalDays = 31 + 31 + 31
         assertEquals(totalDays, me.workedDays + me.offDays + me.vacationDays + me.sickDays)
     }

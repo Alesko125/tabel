@@ -14,8 +14,8 @@ data class LoadResult(
 )
 
 /**
- * Тягне табель напряму з Google Sheets і кешує на диску,
- * щоб графік був доступний і без інтернету.
+ * Тягну табель напряму з Google Sheets і кешую на диск,
+ * щоб графік був і без інтернету.
  */
 class Repository(private val context: Context, private val settings: Settings) {
 

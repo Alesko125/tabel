@@ -55,9 +55,9 @@ object Format {
         }
 
     /**
-     * У табелі стоять фактично відпрацьовані години, без обіду. На зміні
+     * У табелі стоять фактично відроблені години, без обіду. По факту на зміні
      * людина на годину довше: 8 годин — це з 9:00 до 18:00, 11 — до 21:00.
-     * Короткі зміни рахуємо без обіду.
+     * Короткі зміни рахую без обіду.
      */
     private fun endHour(start: Int, workHours: Int): Int {
         val lunch = if (workHours >= 7) 1 else 0
@@ -65,8 +65,8 @@ object Format {
     }
 
     /**
-     * Підпис для дня, який за графіком робочий, але фактичні години ще
-     * не записані. Тривалість підказуємо зі звичного для цієї людини дня.
+     * Підпис для дня, який за графіком робочий, але години ще
+     * не забиті. Тривалість беру зі звичного для людини дня.
      */
     fun expectedLabel(typicalHours: Double?, settings: ShiftTimes, name: String?): String {
         if (typicalHours == null) return "за графіком · години ще не проставлені"
@@ -87,7 +87,7 @@ object Format {
         Kind.WORK -> entry.hours?.let { hours(it) } ?: entry.raw
     }
 
-    /** Коротка позначка для клітинки календаря. */
+    /** Коротка позначка в клітинку календаря. */
     fun cellLabel(entry: DayEntry): String = when (entry.kind) {
         Kind.WORK -> entry.hours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: "•"
         Kind.EXPECTED -> "·"
@@ -105,8 +105,8 @@ data class ShiftTimes(
     val dobaStart: Int,
     val dayStart: Int,
     /**
-     * Індивідуальний початок зміни. У табелі цієї інформації немає, тому
-     * винятки задаються вручну — див. [com.example.tabel.data.Settings].
+     * Індивідуальний початок зміни. У табелі цього нема, так що
+     * винятки забиваю вручну — див. [com.example.tabel.data.Settings].
      */
     val perPerson: Map<String, Int> = emptyMap()
 ) {

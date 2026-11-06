@@ -15,11 +15,11 @@ import java.time.LocalTime
 import java.time.ZoneId
 
 /**
- * Щоденне нагадування ставимо будильником, а не періодичною задачею.
+ * Щоденне нагадування ставлю будильником, а не періодичною задачею.
  *
- * WorkManager не вміє в точну годину — його вікно запуску занадто широке,
+ * WorkManager не вміє в точну годину — вікно запуску в нього занадто широке,
  * а одноразова задача, яка переставляє сама себе під тим самим унікальним
- * іменем, скасовує власний запуск.
+ * іменем, зрубує власний запуск.
  */
 object ReminderAlarm {
 
@@ -37,7 +37,7 @@ object ReminderAlarm {
         }
 
         val at = nextTrigger(settings.reminderHour)
-        // Неточний будильник не потребує окремого дозволу й спрацьовує
+        // Неточному будильнику не треба окремого дозволу, і він спрацьовує
         // навіть у режимі очікування — для нагадування цього досить.
         manager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending)
     }
@@ -57,7 +57,7 @@ object ReminderAlarm {
         return target.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
-    /** Сама перевірка графіка ходить у мережу, тому виконуємо її задачею. */
+    /** Сама перевірка графіка лізе в мережу, так що роблю її задачею. */
     fun enqueueCheck(context: Context) {
         WorkManager.getInstance(context).enqueueUniqueWork(
             WORK_NAME,
@@ -71,7 +71,7 @@ class ReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val settings = Settings(context)
-        // Будильники не переживають перезавантаження — ставимо наново.
+        // Будильники не переживають перезавантаження — ставлю наново.
         ReminderAlarm.schedule(context, settings)
 
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) {

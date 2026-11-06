@@ -56,7 +56,7 @@ fun PersonScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        // Прізвище вже у верхній панелі, тут лишаємо тільки місяць.
+        // Прізвище вже зверху в панелі, тут лишаю тільки місяць.
         Text(
             text = MonthNames.title(state.date.year, state.date.monthValue),
             style = MaterialTheme.typography.titleMedium,
@@ -171,7 +171,7 @@ private fun DayChip(
             Text(
                 text = day.toString(),
                 style = MaterialTheme.typography.labelMedium,
-                // Спільні зміни виділяємо жирним — це головне, за чим сюди заходять.
+                // Спільні зміни жирним — це головне, за чим сюди й заходять.
                 fontWeight = if (shared) FontWeight.Bold else FontWeight.Normal,
                 color = if (shared) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.onSurface

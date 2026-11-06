@@ -43,10 +43,10 @@ class Settings(context: Context) {
     // ---------- індивідуальний час зміни ----------
 
     /**
-     * Час зміни в табелі не закодований: легенда з варіантами 8:00-17:00,
-     * 9:00-18:00 та 11:00-20:00 не має кольорових плашок, а кольори прізвищ
-     * групують людей не за часом. Тому початок зміни для окремих людей
-     * задається вручну й зберігається тут.
+     * Часу зміни в табелі нема ніде: легенда з варіантами 8:00-17:00,
+     * 9:00-18:00 і 11:00-20:00 без кольорових плашок, а кольори прізвищ
+     * групують людей не за часом. Так що початок зміни для окремих людей
+     * забиваю вручну, і він лежить тут.
      */
     var personStartHours: Map<String, Int>
         get() = decodeMap(prefs.getString(KEY_PERSON_HOURS, "")).mapNotNull { (k, v) ->
@@ -82,7 +82,7 @@ class Settings(context: Context) {
         get() = prefs.getBoolean(KEY_REMIND_DAY_OF, true)
         set(v) = prefs.edit().putBoolean(KEY_REMIND_DAY_OF, v).apply()
 
-    /** Дата, за яку вже надіслано нагадування — щоб не повторювати. */
+    /** Дата, за яку вже кинув нагадування — щоб не повторювати. */
     var lastReminderDate: String
         get() = prefs.getString(KEY_LAST_REMINDER, "") ?: ""
         set(v) = prefs.edit().putString(KEY_LAST_REMINDER, v).apply()
@@ -128,8 +128,8 @@ class Settings(context: Context) {
     private fun payKey(year: Int, month: Int) = "pay_${year}_$month"
 
     // ---------- службове ----------
-    // Пари «прізвище=година» зберігаємо рядками: у прізвищах бувають крапки,
-    // апострофи й пробіли, але ніколи — знак рівності чи перенесення рядка.
+    // Пари «прізвище=година» тримаю рядками: у прізвищах бувають крапки,
+    // апострофи й пробіли, але ніколи — знак рівності чи перенос рядка.
 
     private fun encodeMap(map: Map<String, String>): String =
         map.entries.joinToString("\n") { it.key + "=" + it.value }

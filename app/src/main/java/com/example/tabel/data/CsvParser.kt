@@ -1,6 +1,6 @@
 package com.example.tabel.data
 
-/** Мінімальний RFC 4180 парсер: Google віддає лапки та екрановані лапки всередині полів. */
+/** Мінімальний RFC 4180 парсер: Google пхає лапки й екрановані лапки всередині полів. */
 object CsvParser {
 
     fun parse(text: String): List<List<String>> {

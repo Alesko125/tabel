@@ -78,7 +78,7 @@ fun MonthScreen(
         }
         Spacer(Modifier.height(6.dp))
 
-        // Порожні клітинки до першого дня місяця (тиждень починається з понеділка).
+        // Пусті клітинки до першого дня місяця (тиждень з понеділка).
         val leading = ym.atDay(1).dayOfWeek.value - 1
         val cells = leading + ym.lengthOfMonth()
         val weeks = (cells + 6) / 7
@@ -156,7 +156,7 @@ private fun DayCell(
 ) {
     val color = shiftColor(entry)
     val filled = entry.kind != Kind.NONE && entry.kind != Kind.OFF
-    // Прогноз показуємо блідішим — це обчислене, а не взяте з табеля.
+    // Прогноз роблю блідішим — це пораховане, а не взяте з табеля.
     val alpha = if (isProjected) shiftPalette().fillAlpha * 0.55f else shiftPalette().fillAlpha
 
     Box(

@@ -40,7 +40,7 @@ class RotationTest {
     fun `відпустка посеред місяця не збиває крок`() {
         val sheet = Fixtures.load("jul2026", 2026, 7)
         val me = sheet.person("Кобзар")!!
-        // Відпрацьовані доби: 3, потім розрив на відпустку, далі 21,24,27,30.
+        // Відроблені доби: 3, потім розрив на відпустку, далі 21,24,27,30.
         assertEquals(3, Rotation.deriveStep(me.dobaDays))
     }
 

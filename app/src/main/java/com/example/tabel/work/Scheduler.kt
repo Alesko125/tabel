@@ -27,7 +27,7 @@ object Scheduler {
         ReminderAlarm.schedule(context, settings)
     }
 
-    /** Перевірка змін у графіку точного часу не потребує — вистачить кожні 6 годин. */
+    /** Перевірці змін у графіку точний час не треба — вистачить кожні 6 годин. */
     fun scheduleWatch(context: Context, settings: Settings) {
         val manager = WorkManager.getInstance(context)
         if (!settings.notifyChanges) {

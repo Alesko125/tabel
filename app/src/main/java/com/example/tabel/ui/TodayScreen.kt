@@ -87,7 +87,7 @@ fun TodayScreen(
             }
         }
 
-        // Дні без проставлених годин — за графіком робочі, тож показуємо окремо.
+        // Дні без забитих годин — за графіком робочі, так що показую окремо.
         val expected = sheet.expectedOn(date.dayOfMonth, state.myName)
             .sortedBy { it.name }
 
@@ -107,7 +107,7 @@ fun TodayScreen(
             }
         }
 
-        // Відсутніх теж показуємо — важливо бачити, кого сьогодні немає.
+        // Відсутніх теж показую — треба бачити, кого сьогодні нема.
         val absent = sheet.people
             .filter { !it.matches(state.myName) }
             .mapNotNull { person ->
@@ -220,7 +220,7 @@ private fun DateNavigator(date: LocalDate, onShiftDay: (Long) -> Unit, onToday: 
     }
 }
 
-/** Місяця ще немає в таблиці — показуємо прогноз ротації. */
+/** Місяця ще нема в таблиці — показую прогноз ротації. */
 @Composable
 private fun ProjectionCard(state: UiState) {
     if (!state.isProjection) {

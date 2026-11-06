@@ -4,11 +4,11 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 /**
- * Добова ротація: відома доба та крок у днях.
+ * Добова ротація: відома доба і крок у днях.
  *
- * Таблиця закінчується останнім заповненим місяцем, але ротація детермінована,
- * тож графік можна порахувати на будь-який місяць уперед. Такі дні позначаються
- * як прогноз, щоб не видавати обчислене за дані з табеля.
+ * Таблиця кінчається останнім заповненим місяцем, але ротація детермінована,
+ * так що графік можна порахувати на будь-який місяць наперед. Такі дні мічу
+ * як прогноз, щоб не видавати пораховане за дані з табеля.
  */
 data class Rotation(val anchor: LocalDate, val step: Int) {
 
@@ -22,7 +22,7 @@ data class Rotation(val anchor: LocalDate, val step: Int) {
         return (1..ym.lengthOfMonth()).filter { isDobaOn(ym.atDay(it)) }
     }
 
-    /** Найближча доба, починаючи з указаної дати включно. */
+    /** Найближча доба, від указаної дати включно. */
     fun nextDobaFrom(date: LocalDate): LocalDate {
         if (step <= 0) return date
         var d = date
@@ -36,7 +36,7 @@ data class Rotation(val anchor: LocalDate, val step: Int) {
     companion object {
         const val DEFAULT_STEP = 3
 
-        /** Виводить ротацію з відпрацьованих діб місяця. */
+        /** Вгадую ротацію з відроблених діб місяця. */
         fun fromDoba(dobaDays: List<Int>, year: Int, month: Int): Rotation? {
             if (dobaDays.isEmpty()) return null
             val step = deriveStep(dobaDays)
@@ -45,7 +45,7 @@ data class Rotation(val anchor: LocalDate, val step: Int) {
 
         /**
          * Крок — найменший проміжок між сусідніми добами. Відпустка посеред
-         * місяця дає великий розрив, тож беремо саме мінімум.
+         * місяця дає великий розрив, так що беру саме мінімум.
          */
         fun deriveStep(dobaDays: List<Int>): Int {
             if (dobaDays.size < 2) return DEFAULT_STEP

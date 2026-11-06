@@ -215,7 +215,7 @@ private fun SettingField(
     )
 }
 
-/** Зміна ID таблиці скидає кеш, тому застосовуємо її лише за кнопкою. */
+/** Зміна ID таблиці скидає кеш, так що застосовую тільки по кнопці. */
 @Composable
 private fun SheetIdField(initial: String, onApply: (String) -> Unit) {
     var text by remember { mutableStateOf(initial) }
